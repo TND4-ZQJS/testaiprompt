@@ -5,430 +5,180 @@
 <title>Nomination Form — Web Filler</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  /* ====== Apple-style minimal UI (same spirit as your reference) ====== */
-  :root{
-    --bg:#f6f7f9; --card:#fff; --ink:#111; --muted:#667085; --border:#e5e7eb; --accent:#007aff; --accent-ink:#fff;
-    --radius:14px; --shadow:0 8px 30px rgba(0,0,0,.06);
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:980px;margin:24px auto;padding:16px}
-  .card{
-    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:18px 18px 8px;
-  }
-  h1{font-size:20px;margin:0 0 12px}
-  h2{font-size:16px;margin:20px 0 8px;color:var(--muted);font-weight:600}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media (max-width:760px){ .grid,.row{grid-template-columns:1fr} }
-
-  label.block{display:block;font-size:12px;color:var(--muted);margin:8px 0 6px}
-  input[type="text"],select{
-    width:100%;appearance:none;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 12px;
-    font-size:15px;outline:none;transition:border .15s ease, box-shadow .15s ease;
-  }
-  input[type="text"]:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,.15)}
-  .muted{color:var(--muted);font-size:13px}
-
-  .bar{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
-  .btn{
-    cursor:pointer;user-select:none;border:1px solid var(--border);background:#fff;border-radius:999px;padding:10px 14px;
-    font-weight:600;font-size:14px;transition:transform .05s ease, background .2s ease, border .2s ease;
-  }
-  .btn:hover{background:#fafafa}
-  .btn:active{transform:translateY(1px)}
-  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-  .btn.ghost{background:#fff}
-  .file{display:inline-block}
-
-  .sig-pad{
-    border:1px dashed #d1d5db;border-radius:12px;background:
-      repeating-linear-gradient(0deg, #fafafa 0 28px, #f5f5f5 28px 29px);
-    position:relative;height:180px;
-  }
-  .sig-title{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
-  .sig-tools{display:flex;gap:8px}
-  .sig-tools .btn{padding:6px 10px;font-size:12px;border-radius:10px}
-  canvas.signature{width:100%;height:100%;display:block;border-radius:12px}
-  .hint{font-size:12px;color:var(--muted);margin-top:6px}
-
-  .hr{height:1px;background:var(--border);margin:14px -18px}
-
-  .footer{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px}
-  input[type="file"]{display:none}
-  .file-label{border:1px solid var(--border);padding:10px 14px;border-radius:999px;cursor:pointer}
+/* ====== Copied style from your pastebin reference ====== */
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f5f6f7;margin:0;padding:20px;}
+.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;max-width:800px;margin:auto;}
+h1{font-size:18px;margin:0 0 16px;}
+label{display:block;margin:8px 0 4px;font-size:14px;color:#333;}
+input[type="text"],select{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;}
+.btn{display:inline-block;margin:6px 4px 0 0;padding:8px 16px;font-size:14px;border-radius:6px;border:1px solid #007aff;background:#007aff;color:#fff;cursor:pointer;}
+.btn.ghost{background:#fff;color:#007aff;border:1px solid #007aff;}
+.section{margin:20px 0;}
+/* Signature modal */
+#sigModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
+#sigBox{background:#fff;padding:16px;border-radius:8px;width:90%;max-width:500px;}
+canvas{width:100%;height:200px;border:1px solid #ccc;border-radius:6px;display:block;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>Nomination Form</h1>
+<div class="card">
+  <h1>Nomination Form</h1>
 
-    <h2>Policy details</h2>
-    <div class="grid">
-      <div>
-        <label class="block" for="PolicyNumber">Application/Policy Number</label>
-        <input id="PolicyNumber" type="text" placeholder="e.g. 0123456789" />
-      </div>
-      <div>
-        <label class="block" for="ProposedInsured">Proposed Insured</label>
-        <input id="ProposedInsured" type="text" placeholder="Full name as per NRIC" />
-      </div>
-      <div>
-        <label class="block" for="MaritalStatus">Marital Status</label>
-        <select id="MaritalStatus">
-          <option value="">-- Select --</option>
-          <option>Single</option>
-          <option>Married</option>
-          <option>Divorced</option>
-          <option>Widowed</option>
-        </select>
-      </div>
-      <div>
-        <label class="block" for="Religion">Religion</label>
-        <select id="Religion">
-          <option value="">-- Select --</option>
-          <option>Muslim</option>
-          <option>Non-Muslim</option>
-        </select>
-      </div>
-    </div>
+  <div class="section">
+    <label for="PolicyNumber">Application/Policy Number</label>
+    <input id="PolicyNumber" type="text" />
+    <label for="ProposedInsured">Proposed Insured</label>
+    <input id="ProposedInsured" type="text" />
+    <label for="MaritalStatus">Marital Status</label>
+    <select id="MaritalStatus">
+      <option value="">-- Select --</option>
+      <option>Single</option><option>Married</option>
+      <option>Divorced</option><option>Widowed</option>
+    </select>
+    <label for="Religion">Religion</label>
+    <select id="Religion">
+      <option value="">-- Select --</option>
+      <option>Muslim</option><option>Non-Muslim</option>
+    </select>
+  </div>
 
-    <div class="hr"></div>
+  <div class="section">
+    <label>Signature of Life Insured</label>
+    <button class="btn ghost" onclick="openSigPad('insured')">Sign</button>
+    <div id="preview_insured"></div>
 
-    <h2>Signatures</h2>
-    <!-- Signature of Life Insured -->
-    <div class="sig-title">
-      <div><strong>Signature of Life Insured</strong></div>
-      <div class="sig-tools">
-        <button type="button" class="btn ghost" data-action="undo" data-target="sig_insured">Undo</button>
-        <button type="button" class="btn ghost" data-action="clear" data-target="sig_insured">Clear</button>
-      </div>
-    </div>
-    <div class="sig-pad">
-      <canvas id="sig_insured" class="signature"></canvas>
-    </div>
-    <div class="hint">Sign with mouse, trackpad, or finger (on touch devices).</div>
+    <label>Signature of Witness</label>
+    <button class="btn ghost" onclick="openSigPad('witness')">Sign</button>
+    <div id="preview_witness"></div>
+  </div>
 
-    <!-- Signature of Witness -->
-    <div class="sig-title" style="margin-top:16px">
-      <div><strong>Signature of Witness</strong></div>
-      <div class="sig-tools">
-        <button type="button" class="btn ghost" data-action="undo" data-target="sig_witness">Undo</button>
-        <button type="button" class="btn ghost" data-action="clear" data-target="sig_witness">Clear</button>
-      </div>
-    </div>
-    <div class="sig-pad">
-      <canvas id="sig_witness" class="signature"></canvas>
-    </div>
-    <div class="hint">Witness should sign here.</div>
-
-    <div class="hr"></div>
-
-    <h2>PDF</h2>
-    <div class="row">
-      <div>
-        <label class="block">PDF File</label>
-        <label class="file-label" for="pdfFile">Choose PDF…</label>
-        <input id="pdfFile" type="file" accept="application/pdf" />
-        <div class="muted" id="pdfName" style="margin-top:6px">No file selected</div>
-      </div>
-      <div>
-        <label class="block">Actions</label>
-        <div class="bar">
-          <button class="btn primary" id="btnDownload">Fill & Download PDF</button>
-          <button class="btn" id="btnReset">Reset All</button>
-        </div>
-      </div>
-    </div>
-
+  <div class="section">
+    <button class="btn" onclick="downloadPDF()">Fill & Download PDF</button>
+    <button class="btn ghost" onclick="resetAll()">Reset</button>
   </div>
 </div>
 
-<!-- pdf-lib (client-side fill) -->
+<!-- Signature Modal -->
+<div id="sigModal">
+  <div id="sigBox">
+    <p id="sigTitle"></p>
+    <canvas id="sigCanvas"></canvas>
+    <div style="margin-top:8px">
+      <button class="btn" onclick="saveSig()">Save</button>
+      <button class="btn ghost" onclick="clearSig()">Clear</button>
+      <button class="btn ghost" onclick="closeSig()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
-/* ========= Tiny helpers ========= */
-const $ = (id)=>document.getElementById(id);
-const els = {
-  PolicyNumber: $("PolicyNumber"),
-  ProposedInsured: $("ProposedInsured"),
-  MaritalStatus: $("MaritalStatus"),
-  Religion: $("Religion"),
-  pdfFile: $("pdfFile"),
-  pdfName: $("pdfName"),
-  btnDownload: $("btnDownload"),
-  btnReset: $("btnReset"),
-  sigInsured: $("sig_insured"),
-  sigWitness: $("sig_witness"),
-};
-const NS = "nominationForm.v1";
+const NS="nominationForm";
+const inputs=["PolicyNumber","ProposedInsured","MaritalStatus","Religion"];
+inputs.forEach(id=>{
+  const el=document.getElementById(id);
+  el.value=localStorage.getItem(NS+":"+id)||"";
+  el.addEventListener("input",()=>localStorage.setItem(NS+":"+id,el.value));
+});
 
-/* ========= Autosave (inputs + selects) ========= */
-const FIELDS = ["PolicyNumber","ProposedInsured","MaritalStatus","Religion"];
-function saveForm(){
-  const data = {};
-  for (const id of FIELDS){ data[id] = els[id].value || ""; }
-  localStorage.setItem(NS+":form", JSON.stringify(data));
+/* ===== Signature pad ===== */
+let sigTarget=null,ctx=null,isDrawing=false,paths=[];
+function openSigPad(target){
+  sigTarget=target;
+  document.getElementById("sigTitle").textContent="Sign: "+(target==="insured"?"Life Insured":"Witness");
+  document.getElementById("sigModal").style.display="flex";
+  const canvas=document.getElementById("sigCanvas");
+  ctx=canvas.getContext("2d");
+  resizeCanvas();
+  restorePaths();
 }
-function loadForm(){
-  const raw = localStorage.getItem(NS+":form");
-  if(!raw) return;
-  try{
-    const data = JSON.parse(raw);
-    for (const id of FIELDS){ if(id in data) els[id].value = data[id]; }
-  }catch(e){}
+function resizeCanvas(){
+  const c=document.getElementById("sigCanvas");
+  c.width=c.clientWidth; c.height=c.clientHeight;
+  redraw();
 }
-FIELDS.forEach(id => els[id].addEventListener("input", saveForm));
-
-/* ========= Signature Pad (transparent, undo, autosave) ========= */
-class SimpleSignature {
-  constructor(canvas, storageKey){
-    this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.storageKey = storageKey;
-    this.dpr = Math.max(1, window.devicePixelRatio || 1);
-    this.paths = []; // array of paths; each path is array of points
-    this.isDrawing = false;
-    this.currentPath = [];
-    this.strokeWidth = 2;
-    this.strokeStyle = "#111";
-    this._resize();
-    this._bind();
-    this._restoreFromStorage();
-  }
-  _resize(){
-    const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = Math.floor(rect.width * this.dpr);
-    this.canvas.height = Math.floor(rect.height * this.dpr);
-    this.ctx.scale(this.dpr, this.dpr);
-    this._redraw();
-  }
-  _bind(){
-    window.addEventListener("resize", ()=>this._resize());
-    const start = (x,y)=>{ this.isDrawing=true; this.currentPath=[{x,y}]; };
-    const move  = (x,y)=>{ if(!this.isDrawing) return; this.currentPath.push({x,y}); this._redraw(); };
-    const end   = ()=>{ if(!this.isDrawing) return; this.isDrawing=false; if(this.currentPath.length){ this.paths.push(this.currentPath); this.currentPath=[]; this._persist(); } };
-
-    // Pointer events for mouse/touch/pen
-    this.canvas.addEventListener("pointerdown", e=>{
-      this.canvas.setPointerCapture(e.pointerId);
-      const pos = this._pos(e);
-      start(pos.x,pos.y);
-    });
-    this.canvas.addEventListener("pointermove", e=>{
-      const pos = this._pos(e);
-      move(pos.x,pos.y);
-    });
-    this.canvas.addEventListener("pointerup", end);
-    this.canvas.addEventListener("pointercancel", end);
-    this.canvas.addEventListener("pointerleave", end);
-  }
-  _pos(e){
-    const r = this.canvas.getBoundingClientRect();
-    return { x:(e.clientX - r.left), y:(e.clientY - r.top) };
-  }
-  _redraw(){
-    // Transparent background — don't clear with a color
-    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
-    this.ctx.save();
-    this.ctx.lineCap="round"; this.ctx.lineJoin="round";
-    this.ctx.strokeStyle=this.strokeStyle; this.ctx.lineWidth=this.strokeWidth;
-    const drawPath = (path)=>{
-      if(path.length<2){ // dot
-        const p = path[0]; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, this.strokeWidth/2, 0, Math.PI*2); this.ctx.fillStyle=this.strokeStyle; this.ctx.fill(); return;
-      }
-      this.ctx.beginPath();
-      this.ctx.moveTo(path[0].x, path[0].y);
-      for(let i=1;i<path.length;i++){ this.ctx.lineTo(path[i].x, path[i].y); }
-      this.ctx.stroke();
-    };
-    for(const p of this.paths) drawPath(p);
-    if(this.currentPath.length) drawPath(this.currentPath);
-    this.ctx.restore();
-  }
-  clear(){ this.paths=[]; this.currentPath=[]; this._redraw(); this._persist(); }
-  undo(){ this.paths.pop(); this._redraw(); this._persist(); }
-  toDataURL(){ return this.canvas.toDataURL("image/png"); }
-  _persist(){
-    // store png (transparent) and vector paths for crisp restore on resize
-    localStorage.setItem(NS+":sig:"+this.storageKey, JSON.stringify(this.paths));
-    localStorage.setItem(NS+":sig:"+this.storageKey+":png", this.toDataURL());
-  }
-  _restoreFromStorage(){
-    const raw = localStorage.getItem(NS+":sig:"+this.storageKey);
-    if(!raw) return;
-    try{ this.paths = JSON.parse(raw) || []; }catch(e){ this.paths=[]; }
-    this._redraw();
-  }
-}
-
-let sigInsured, sigWitness;
-function bindSignatureTools(){
-  document.querySelectorAll(".sig-tools .btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const target = btn.dataset.target;
-      const action = btn.dataset.action;
-      const pad = target==="sig_insured" ? sigInsured : sigWitness;
-      if(action==="clear") pad.clear();
-      else if(action==="undo") pad.undo();
-    });
+function redraw(){
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  ctx.lineWidth=2; ctx.lineCap="round"; ctx.strokeStyle="#000";
+  paths.forEach(p=>{
+    ctx.beginPath();
+    p.forEach((pt,i)=>{ i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y); });
+    ctx.stroke();
   });
 }
+function clearSig(){paths=[];redraw();}
+function saveSig(){
+  localStorage.setItem(NS+":sig:"+sigTarget,JSON.stringify(paths));
+  localStorage.setItem(NS+":sig:"+sigTarget+":png",ctx.canvas.toDataURL());
+  showPreview(sigTarget);
+  closeSig();
+}
+function showPreview(target){
+  const png=localStorage.getItem(NS+":sig:"+target+":png");
+  if(png) document.getElementById("preview_"+target).innerHTML=`<img src="${png}" style="max-height:60px">`;
+}
+function restorePaths(){
+  const raw=localStorage.getItem(NS+":sig:"+sigTarget);
+  paths=raw?JSON.parse(raw):[];
+  redraw();
+}
+function closeSig(){document.getElementById("sigModal").style.display="none";}
+document.getElementById("sigCanvas").addEventListener("mousedown",e=>{
+  isDrawing=true;paths.push([{x:e.offsetX,y:e.offsetY}]);
+});
+document.getElementById("sigCanvas").addEventListener("mousemove",e=>{
+  if(!isDrawing)return;
+  paths[paths.length-1].push({x:e.offsetX,y:e.offsetY});
+  redraw();
+});
+window.addEventListener("mouseup",()=>isDrawing=false);
+["insured","witness"].forEach(showPreview);
 
-/* ========= Reset All ========= */
+/* ===== Reset ===== */
 function resetAll(){
-  if(!confirm("Reset all inputs and signatures?")) return;
-  localStorage.removeItem(NS+":form");
-  localStorage.removeItem(NS+":sig:insured");
-  localStorage.removeItem(NS+":sig:insured:png");
-  localStorage.removeItem(NS+":sig:witness");
-  localStorage.removeItem(NS+":sig:witness:png");
-  FIELDS.forEach(id => els[id].value = "");
-  sigInsured.clear();
-  sigWitness.clear();
+  if(!confirm("Reset all?"))return;
+  inputs.forEach(id=>localStorage.removeItem(NS+":"+id));
+  ["insured","witness"].forEach(t=>{
+    localStorage.removeItem(NS+":sig:"+t);
+    localStorage.removeItem(NS+":sig:"+t+":png");
+    document.getElementById("preview_"+t).innerHTML="";
+  });
+  location.reload();
 }
 
-/* ========= PDF Filler (scaffold) =========
-   You can map either by AcroForm field names, or XY coordinates.
-   – If your PDF has form fields: fill via field names in ACRO_MAP.
-   – If it's a flat PDF: draw text & images at XY coords in XY_MAP.
-   >>> TODO: Replace placeholders once you supply the actual PDF & mapping.
-=========================================== */
-async function fillAndDownload(){
-  const file = els.pdfFile.files[0];
-  if(!file){ alert("Please choose a PDF file first."); return; }
-  const aB = await file.arrayBuffer();
-  const { PDFDocument, rgb, StandardFonts } = PDFLib;
-  const pdfDoc = await PDFDocument.load(aB, { updateMetadata: false });
+/* ===== PDF filler scaffold ===== */
+async function downloadPDF(){
+  const {PDFDocument,StandardFonts,rgb}=PDFLib;
+  const pdfDoc=await PDFDocument.create();
+  const page=pdfDoc.addPage([600,800]);
+  const font=await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-  // Try AcroForm fill first
-  const form = pdfDoc.getForm?.();
-  const hasForm = !!form && pdfDoc.context.lookupMaybe(pdfDoc.catalog.get(PDFLib.PDFName.of('AcroForm')));
-
-  // ---- FORM VALUES ----
-  const v = {
-    PolicyNumber: els.PolicyNumber.value.trim(),
-    ProposedInsured: els.ProposedInsured.value.trim(),
-    MaritalStatus: els.MaritalStatus.value,
-    Religion: els.Religion.value
+  const v={
+    PolicyNumber:PolicyNumber.value,
+    ProposedInsured:ProposedInsured.value,
+    MaritalStatus:MaritalStatus.value,
+    Religion:Religion.value
   };
-  const sigPngInsured = localStorage.getItem(NS+":sig:insured:png");
-  const sigPngWitness = localStorage.getItem(NS+":sig:witness:png");
+  let y=750;
+  for(let k in v){ page.drawText(k+": "+v[k],{x:50,y,font,size:12,color:rgb(0,0,0)}); y-=20; }
 
-  if(hasForm){
-    // ====== ACROFORM MAPPING (EDIT THESE FIELD NAMES) ======
-    const ACRO_MAP = {
-      PolicyNumber: "PolicyNumber",
-      ProposedInsured: "ProposedInsured",
-      MaritalStatus: "MaritalStatus",
-      Religion: "Religion",
-      SigInsured: "SignatureOfLifeInsured",
-      SigWitness: "SignatureOfWitness"
-    };
-    // Fill text/select fields
-    const setField = (name, val) => {
-      try{ form.getTextField(name).setText(val); }catch(e){}
-      try{ form.getDropdown(name).select(val); }catch(e){}
-    };
-    setField(ACRO_MAP.PolicyNumber, v.PolicyNumber);
-    setField(ACRO_MAP.ProposedInsured, v.ProposedInsured);
-    setField(ACRO_MAP.MaritalStatus, v.MaritalStatus);
-    setField(ACRO_MAP.Religion, v.Religion);
-
-    // Signatures into button fields if present, else fall back to XY later
-    if(sigPngInsured){ try{
-      const img = await pdfDoc.embedPng(sigPngInsured);
-      const btn = form.getButton(ACRO_MAP.SigInsured);
-      const r = btn.acroField.getWidgets()[0].getRectangle();
-      const w = r.x2 - r.x1, h = r.y2 - r.y1;
-      btn.setImage(img);
-      btn.scaleImageToFit(); // keep aspect
-    }catch(e){}}
-    if(sigPngWitness){ try{
-      const img = await pdfDoc.embedPng(sigPngWitness);
-      const btn = form.getButton(ACRO_MAP.SigWitness);
-      btn.setImage(img);
-      btn.scaleImageToFit();
-    }catch(e){}}
-    try{ form.updateFieldAppearances(); }catch(e){}
+  for(let t of ["insured","witness"]){
+    const png=localStorage.getItem(NS+":sig:"+t+":png");
+    if(png){
+      const img=await pdfDoc.embedPng(png);
+      page.drawImage(img,{x:50,y:y-60,width:120,height:50});
+      page.drawText(t.toUpperCase(),{x:180,y:y-10,size:10,font});
+      y-=80;
+    }
   }
 
-  // ====== XY DRAW (for flat PDFs or if fields not present) ======
-  const page = pdfDoc.getPages()[0];
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const textColor = rgb(0,0,0);
-  const size = 10.5;
-
-  // >>> Replace these XY positions with your actual coordinates (points)
-  const XY_MAP = {
-    PolicyNumber: { page:0, x: 120, y: 720 },
-    ProposedInsured: { page:0, x: 120, y: 700 },
-    MaritalStatus: { page:0, x: 120, y: 680 },
-    Religion: { page:0, x: 120, y: 660 },
-    SigInsured: { page:0, x: 120, y: 580, w: 180, h: 50 },
-    SigWitness: { page:0, x: 380, y: 580, w: 180, h: 50 }
-  };
-
-  function drawText(key, val){
-    const m = XY_MAP[key]; if(!m || !val) return;
-    const p = pdfDoc.getPages()[m.page||0];
-    p.drawText(String(val), { x:m.x, y:m.y, size, font, color:textColor });
-  }
-  drawText("PolicyNumber", v.PolicyNumber);
-  drawText("ProposedInsured", v.ProposedInsured);
-  drawText("MaritalStatus", v.MaritalStatus);
-  drawText("Religion", v.Religion);
-
-  async function drawSig(key, dataUrl){
-    const m = XY_MAP[key]; if(!m || !dataUrl) return;
-    const p = pdfDoc.getPages()[m.page||0];
-    const img = await pdfDoc.embedPng(dataUrl); // transparent PNG
-    const original = img.scale(1);
-    // Scale to fit preserving aspect ratio inside target w/h
-    const targetW = m.w || original.width; const targetH = m.h || original.height;
-    const scale = Math.min(targetW / original.width, targetH / original.height);
-    const w = original.width * scale; const h = original.height * scale;
-    p.drawImage(img, { x:m.x, y:m.y, width:w, height:h });
-  }
-  await drawSig("SigInsured", sigPngInsured);
-  await drawSig("SigWitness", sigPngWitness);
-
-  // Output
-  const bytes = await pdfDoc.save({ updateFieldAppearances: true });
-  const blob = new Blob([bytes], { type:"application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "Nomination-Form-Filled.pdf";
-  document.body.appendChild(a); a.click(); a.remove();
+  const bytes=await pdfDoc.save();
+  const blob=new Blob([bytes],{type:"application/pdf"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="NominationForm.pdf";a.click();
   URL.revokeObjectURL(url);
 }
-
-/* ========= Wire-up ========= */
-window.addEventListener("DOMContentLoaded", ()=>{
-  loadForm();
-
-  // Init signature pads (transparent background)
-  sigInsured = new SimpleSignature(els.sigInsured, "insured");
-  sigWitness = new SimpleSignature(els.sigWitness, "witness");
-  bindSignatureTools();
-
-  // Resize canvases to container size (already handled in class); redraw after a tick
-  requestAnimationFrame(()=>{ sigInsured._resize(); sigWitness._resize(); });
-
-  // Persist input values
-  saveForm();
-
-  // File picker label
-  els.pdfFile.addEventListener("change", ()=>{
-    els.pdfName.textContent = els.pdfFile.files[0] ? els.pdfFile.files[0].name : "No file selected";
-  });
-
-  // Actions
-  els.btnDownload.addEventListener("click", fillAndDownload);
-  els.btnReset.addEventListener("click", resetAll);
-});
 </script>
 </body>
 </html>
