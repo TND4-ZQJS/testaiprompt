@@ -5,180 +5,431 @@
 <title>Nomination Form — Web Filler</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-/* ====== Copied style from your pastebin reference ====== */
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f5f6f7;margin:0;padding:20px;}
-.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:16px;max-width:800px;margin:auto;}
-h1{font-size:18px;margin:0 0 16px;}
-label{display:block;margin:8px 0 4px;font-size:14px;color:#333;}
-input[type="text"],select{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;}
-.btn{display:inline-block;margin:6px 4px 0 0;padding:8px 16px;font-size:14px;border-radius:6px;border:1px solid #007aff;background:#007aff;color:#fff;cursor:pointer;}
-.btn.ghost{background:#fff;color:#007aff;border:1px solid #007aff;}
-.section{margin:20px 0;}
-/* Signature modal */
-#sigModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);align-items:center;justify-content:center;}
-#sigBox{background:#fff;padding:16px;border-radius:8px;width:90%;max-width:500px;}
-canvas{width:100%;height:200px;border:1px solid #ccc;border-radius:6px;display:block;}
+:root{
+  --bg:#f6f7f9; --card:#fff; --accent:#007aff; --muted:#666; --line:#e9e9ee;
+}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:18px;background:var(--bg);color:#111}
+main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+h1{margin:15px 0 35px 0;font-size:1.50rem}
+.section{background:#fbfbfd;border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0}
+.section h2{margin:0 0 10px 0;font-size:1.05rem}
+label{display:block;margin:8px 0;font-size:0.95rem}
+input[type=text],select,textarea{
+  width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-top:6px;font-size:1rem;background:#fff
+}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.muted{color:var(--muted);font-size:0.85rem}
+button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
+button.secondary{background:#999}
+button.ghost{background:transparent;border:1px solid var(--line);color:#333}
+.actions{display:flex;gap:12px;align-items:center}
+
+/* Signature preview tiles (same pattern) */
+.sig-preview{
+  width:100%; height:150px; border:1px dashed #bbb; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer; position:relative;
+}
+.sig-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
+.sig-preview span{ color:#999; }
+
+/* Signature Modal (same structure) */
+.sig-modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; }
+.sig-modal .box{
+  width:min(560px, 92vw); background:#fff; margin:6vh auto; padding:14px; border-radius:12px;
+  box-shadow:0 18px 50px rgba(0,0,0,.25)
+}
+.sig-modal h3{ margin:0 0 8px 0; }
+/* NOTE: canvas is responsive via CSS; internal pixels are set in JS for crispness */
+#sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
+.sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+
+/* Hidden XY% inputs — match ref behavior; keep visible for tuning or hide by keeping this */
+.hidden-inputs {display:none;}
+
+/* Save indicator toast */
+#saveStatus{
+  position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff;
+  padding:6px 10px; border-radius:8px; font-size:0.85rem; opacity:0; transition:opacity .25s;
+}
+
+@media (max-width:900px){ }
+@media (max-width:720px){ }
 </style>
 </head>
 <body>
-<div class="card">
+<main>
   <h1>Nomination Form</h1>
 
-  <div class="section">
-    <label for="PolicyNumber">Application/Policy Number</label>
-    <input id="PolicyNumber" type="text" />
-    <label for="ProposedInsured">Proposed Insured</label>
-    <input id="ProposedInsured" type="text" />
-    <label for="MaritalStatus">Marital Status</label>
-    <select id="MaritalStatus">
-      <option value="">-- Select --</option>
-      <option>Single</option><option>Married</option>
-      <option>Divorced</option><option>Widowed</option>
-    </select>
-    <label for="Religion">Religion</label>
-    <select id="Religion">
-      <option value="">-- Select --</option>
-      <option>Muslim</option><option>Non-Muslim</option>
-    </select>
-  </div>
+  <!-- Section: Policy details -->
+  <section class="section">
+    <h2>Policy Details</h2>
 
-  <div class="section">
-    <label>Signature of Life Insured</label>
-    <button class="btn ghost" onclick="openSigPad('insured')">Sign</button>
-    <div id="preview_insured"></div>
+    <div class="row">
+      <label style="flex:1">
+        Application/Policy Number
+        <input id="PolicyNumber" data-autosave type="text" placeholder="Enter number">
+      </label>
+      <label style="flex:1">
+        Proposed Insured
+        <input id="ProposedInsured" data-autosave type="text" placeholder="Full name">
+      </label>
+    </div>
 
-    <label>Signature of Witness</label>
-    <button class="btn ghost" onclick="openSigPad('witness')">Sign</button>
-    <div id="preview_witness"></div>
-  </div>
+    <div class="row">
+      <label style="flex:1">
+        Marital Status
+        <select id="MaritalStatus" data-autosave>
+          <option value="">-- Select --</option>
+          <option>Single</option>
+          <option>Married</option>
+          <option>Divorced</option>
+          <option>Widowed</option>
+        </select>
+      </label>
 
-  <div class="section">
-    <button class="btn" onclick="downloadPDF()">Fill & Download PDF</button>
-    <button class="btn ghost" onclick="resetAll()">Reset</button>
-  </div>
-</div>
+      <label style="flex:1">
+        Religion
+        <select id="Religion" data-autosave>
+          <option value="">-- Select --</option>
+          <option>Muslim</option>
+          <option>Non-Muslim</option>
+        </select>
+      </label>
+    </div>
+  </section>
 
-<!-- Signature Modal -->
-<div id="sigModal">
-  <div id="sigBox">
-    <p id="sigTitle"></p>
+  <!-- Section: Signatures -->
+  <section class="section">
+    <h2>Signatures</h2>
+
+    <div class="row" style="align-items:stretch">
+      <div style="flex:1;min-width:260px">
+        <label>Signature of Life Insured</label>
+        <div class="sig-preview" id="sigTile_insured" data-target="insured">
+          <span>Tap to Sign (Life Insured)</span>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="ghost" id="clearSig_insured">Clear Signature</button>
+        </div>
+
+        <!-- XY% tuning (same concept as reference) -->
+        <div class="row">
+          <div>
+            <div class="muted" style="margin-bottom:6px">Life Insured Signature — Positioning</div>
+            <div class="row">
+              <label style="width:130px">X:
+                <input id="SigX_insured" data-autosave type="text" value="50">
+              </label>
+              <label style="width:130px">Y:
+                <input id="SigY_insured" data-autosave type="text" value="560">
+              </label>
+              <label style="width:160px">Scale (%):
+                <input id="SigScale_insured" data-autosave type="text" value="100">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:260px">
+        <label>Signature of Witness</label>
+        <div class="sig-preview" id="sigTile_witness" data-target="witness">
+          <span>Tap to Sign (Witness)</span>
+        </div>
+        <div class="row" style="justify-content:flex-end">
+          <button class="ghost" id="clearSig_witness">Clear Signature</button>
+        </div>
+
+        <!-- XY% tuning -->
+        <div class="row">
+          <div>
+            <div class="muted" style="margin-bottom:6px">Witness Signature — Positioning</div>
+            <div class="row">
+              <label style="width:130px">X:
+                <input id="SigX_witness" data-autosave type="text" value="50">
+              </label>
+              <label style="width:130px">Y:
+                <input id="SigY_witness" data-autosave type="text" value="460">
+              </label>
+              <label style="width:160px">Scale (%):
+                <input id="SigScale_witness" data-autosave type="text" value="100">
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <small class="muted">Tip: adjust X/Y/Scale to align on your PDF, then regenerate.</small>
+  </section>
+
+  <section class="section">
+    <div class="actions">
+      <button id="btnGenPdf">Generate PDF</button>
+      <button class="ghost" id="btnReset">Reset All</button>
+    </div>
+  </section>
+</main>
+
+<!-- Signature Modal (same structure/IDs as reference) -->
+<div id="sigModal" class="sig-modal" aria-hidden="true">
+  <div class="box">
+    <h3 id="sigTitle">Draw Signature</h3>
     <canvas id="sigCanvas"></canvas>
-    <div style="margin-top:8px">
-      <button class="btn" onclick="saveSig()">Save</button>
-      <button class="btn ghost" onclick="clearSig()">Clear</button>
-      <button class="btn ghost" onclick="closeSig()">Cancel</button>
+    <div class="sig-actions">
+      <button id="sigDone">Done</button>
+      <button class="ghost" id="sigClear">Clear</button>
+      <button class="ghost" id="sigCancel">Cancel</button>
     </div>
   </div>
 </div>
 
+<div id="saveStatus">Saved</div>
+
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
-const NS="nominationForm";
-const inputs=["PolicyNumber","ProposedInsured","MaritalStatus","Religion"];
-inputs.forEach(id=>{
-  const el=document.getElementById(id);
-  el.value=localStorage.getItem(NS+":"+id)||"";
-  el.addEventListener("input",()=>localStorage.setItem(NS+":"+id,el.value));
+/* ====== Config (PDF + storage key) — mirrors reference structure ====== */
+const PDF_FILE = 'Nomination_Form.pdf'; // <-- replace with your actual template filename
+const NS = 'NF_v1'; // localStorage namespace (similar to reference keying)
+
+/* ====== Utilities ====== */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+function showSavedToast(){
+  const t = $('#saveStatus');
+  t.style.opacity = '1';
+  clearTimeout(showSavedToast._h);
+  showSavedToast._h = setTimeout(()=> t.style.opacity='0', 800);
+}
+function saveKV(key, val){ localStorage.setItem(NS+':'+key, val); showSavedToast(); }
+function loadKV(key, def=''){ return localStorage.getItem(NS+':'+key) ?? def; }
+function delKV(key){ localStorage.removeItem(NS+':'+key); }
+
+/* ====== Autosave (same pattern as reference paste) ====== */
+function initAutosave(){
+  $$('[data-autosave]').forEach(el=>{
+    const key = el.id || el.name;
+    if(!key) return;
+    // restore
+    if(el.tagName==='SELECT' || el.type==='text' || el.type==='textarea'){
+      el.value = loadKV(key, el.value || '');
+    }
+    if(el.type==='checkbox' || el.type==='radio'){
+      el.checked = loadKV(key, '0') === '1';
+    }
+    // events
+    const handler = ()=>{
+      if(el.type==='checkbox' || el.type==='radio'){
+        saveKV(key, el.checked ? '1' : '0');
+      }else{
+        saveKV(key, el.value ?? '');
+      }
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+}
+initAutosave();
+
+/* ====== Signature pad (tile -> modal -> save preview), identical UX ====== */
+const SigStore = {
+  get(target){ return JSON.parse(loadKV('sig:'+target, 'null')); },
+  set(target, data){ saveKV('sig:'+target, JSON.stringify(data)); },
+  getPNG(target){ return loadKV('sig:'+target+':png', ''); },
+  setPNG(target, dataUrl){ saveKV('sig:'+target+':png', dataUrl); },
+  clear(target){
+    delKV('sig:'+target); delKV('sig:'+target+':png');
+  }
+};
+
+// open modal from tiles
+['insured','witness'].forEach(target=>{
+  const tile = $('#sigTile_'+target);
+  const clearBtn = $('#clearSig_'+target);
+  tile.addEventListener('click', ()=> openSigModal(target));
+  clearBtn.addEventListener('click', (e)=>{
+    e.preventDefault();
+    SigStore.clear(target);
+    renderSigPreview(target);
+  });
+  renderSigPreview(target);
 });
 
-/* ===== Signature pad ===== */
-let sigTarget=null,ctx=null,isDrawing=false,paths=[];
-function openSigPad(target){
-  sigTarget=target;
-  document.getElementById("sigTitle").textContent="Sign: "+(target==="insured"?"Life Insured":"Witness");
-  document.getElementById("sigModal").style.display="flex";
-  const canvas=document.getElementById("sigCanvas");
-  ctx=canvas.getContext("2d");
-  resizeCanvas();
-  restorePaths();
+let sigTarget = null;
+let ctx, paths = [], isDrawing = false;
+
+function openSigModal(target){
+  sigTarget = target;
+  $('#sigTitle').textContent = 'Draw Signature — ' + (target==='insured' ? 'Life Insured' : 'Witness');
+  $('#sigModal').style.display = 'block';
+  setupSigCanvas();
+  restoreSigPaths();
 }
-function resizeCanvas(){
-  const c=document.getElementById("sigCanvas");
-  c.width=c.clientWidth; c.height=c.clientHeight;
-  redraw();
+function closeSigModal(){
+  $('#sigModal').style.display = 'none';
 }
-function redraw(){
+
+function setupSigCanvas(){
+  const c = $('#sigCanvas');
+  // ensure crispness on HiDPI
+  const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+  const rect = c.getBoundingClientRect();
+  c.width = Math.floor(rect.width * ratio);
+  c.height = Math.floor(rect.height * ratio);
+  ctx = c.getContext('2d');
+  ctx.scale(ratio, ratio);
+  drawSig();
+}
+
+function drawSig(){
   ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-  ctx.lineWidth=2; ctx.lineCap="round"; ctx.strokeStyle="#000";
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
   paths.forEach(p=>{
     ctx.beginPath();
-    p.forEach((pt,i)=>{ i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y); });
+    p.forEach((pt,i)=> i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
     ctx.stroke();
   });
 }
-function clearSig(){paths=[];redraw();}
-function saveSig(){
-  localStorage.setItem(NS+":sig:"+sigTarget,JSON.stringify(paths));
-  localStorage.setItem(NS+":sig:"+sigTarget+":png",ctx.canvas.toDataURL());
-  showPreview(sigTarget);
-  closeSig();
+function restoreSigPaths(){
+  const saved = SigStore.get(sigTarget);
+  paths = saved || [];
+  drawSig();
 }
-function showPreview(target){
-  const png=localStorage.getItem(NS+":sig:"+target+":png");
-  if(png) document.getElementById("preview_"+target).innerHTML=`<img src="${png}" style="max-height:60px">`;
+function sigPointFromEvent(e, canvas){
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.touches? e.touches[0].clientX : e.clientX) - rect.left;
+  const y = (e.touches? e.touches[0].clientY : e.clientY) - rect.top;
+  return {x,y};
 }
-function restorePaths(){
-  const raw=localStorage.getItem(NS+":sig:"+sigTarget);
-  paths=raw?JSON.parse(raw):[];
-  redraw();
-}
-function closeSig(){document.getElementById("sigModal").style.display="none";}
-document.getElementById("sigCanvas").addEventListener("mousedown",e=>{
-  isDrawing=true;paths.push([{x:e.offsetX,y:e.offsetY}]);
-});
-document.getElementById("sigCanvas").addEventListener("mousemove",e=>{
-  if(!isDrawing)return;
-  paths[paths.length-1].push({x:e.offsetX,y:e.offsetY});
-  redraw();
-});
-window.addEventListener("mouseup",()=>isDrawing=false);
-["insured","witness"].forEach(showPreview);
+function bindSigHandlers(){
+  const c = $('#sigCanvas');
 
-/* ===== Reset ===== */
-function resetAll(){
-  if(!confirm("Reset all?"))return;
-  inputs.forEach(id=>localStorage.removeItem(NS+":"+id));
-  ["insured","witness"].forEach(t=>{
-    localStorage.removeItem(NS+":sig:"+t);
-    localStorage.removeItem(NS+":sig:"+t+":png");
-    document.getElementById("preview_"+t).innerHTML="";
+  const down = e => { e.preventDefault(); isDrawing = true; paths.push([sigPointFromEvent(e,c)]); drawSig(); };
+  const move = e => { if(!isDrawing) return; e.preventDefault(); paths[paths.length-1].push(sigPointFromEvent(e,c)); drawSig(); };
+  const up = e => { isDrawing = false; };
+
+  c.addEventListener('mousedown', down);
+  c.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', up);
+
+  c.addEventListener('touchstart', down, {passive:false});
+  c.addEventListener('touchmove', move, {passive:false});
+  window.addEventListener('touchend', up);
+}
+bindSigHandlers();
+
+$('#sigClear').addEventListener('click', (e)=>{ e.preventDefault(); paths=[]; drawSig(); });
+$('#sigCancel').addEventListener('click', (e)=>{ e.preventDefault(); closeSigModal(); });
+
+$('#sigDone').addEventListener('click', ()=>{
+  SigStore.set(sigTarget, paths);
+  const dataURL = $('#sigCanvas').toDataURL('image/png');
+  SigStore.setPNG(sigTarget, dataURL);
+  renderSigPreview(sigTarget);
+  closeSigModal();
+});
+
+function renderSigPreview(target){
+  const tile = $('#sigTile_'+target);
+  const img = SigStore.getPNG(target);
+  if(img){
+    tile.innerHTML = '<img alt="signature preview" />';
+    tile.querySelector('img').src = img;
+  }else{
+    tile.innerHTML = '<span>Tap to Sign ('+(target==='insured'?'Life Insured':'Witness')+')</span>';
+  }
+}
+
+/* ====== Reset All (same behavior as ref) ====== */
+$('#btnReset').addEventListener('click', ()=>{
+  if(!confirm('Reset all saved values?')) return;
+  // clear autosaved
+  $$('[data-autosave]').forEach(el=>{
+    const key = el.id || el.name;
+    if(!key) return;
+    delKV(key);
+    if(el.type==='checkbox' || el.type==='radio'){ el.checked = false; }
+    else { el.value=''; }
   });
-  location.reload();
-}
+  // clear signatures
+  ['insured','witness'].forEach(t=> SigStore.clear(t));
+  renderSigPreview('insured');
+  renderSigPreview('witness');
+  showSavedToast();
+});
 
-/* ===== PDF filler scaffold ===== */
-async function downloadPDF(){
-  const {PDFDocument,StandardFonts,rgb}=PDFLib;
-  const pdfDoc=await PDFDocument.create();
-  const page=pdfDoc.addPage([600,800]);
-  const font=await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-  const v={
-    PolicyNumber:PolicyNumber.value,
-    ProposedInsured:ProposedInsured.value,
-    MaritalStatus:MaritalStatus.value,
-    Religion:Religion.value
-  };
-  let y=750;
-  for(let k in v){ page.drawText(k+": "+v[k],{x:50,y,font,size:12,color:rgb(0,0,0)}); y-=20; }
-
-  for(let t of ["insured","witness"]){
-    const png=localStorage.getItem(NS+":sig:"+t+":png");
-    if(png){
-      const img=await pdfDoc.embedPng(png);
-      page.drawImage(img,{x:50,y:y-60,width:120,height:50});
-      page.drawText(t.toUpperCase(),{x:180,y:y-10,size:10,font});
-      y-=80;
-    }
+/* ====== PDF printing (same flow as reference) ====== */
+async function generatePDF(){
+  const { PDFDocument, StandardFonts } = PDFLib;
+  let pdfDoc;
+  let templateBytes = null;
+  try{
+    const res = await fetch(PDF_FILE);
+    if(!res.ok) throw new Error('Template fetch failed');
+    templateBytes = await res.arrayBuffer();
+  }catch(e){
+    console.warn('Template not found, will create blank PDF as fallback:', e);
   }
 
-  const bytes=await pdfDoc.save();
-  const blob=new Blob([bytes],{type:"application/pdf"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="NominationForm.pdf";a.click();
+  if(templateBytes){
+    pdfDoc = await PDFDocument.load(templateBytes);
+  }else{
+    pdfDoc = await PDFDocument.create();
+    pdfDoc.addPage([595, 842]); // A4 portrait fallback
+  }
+
+  // Use first page (extend if your template has more pages)
+  const pages = pdfDoc.getPages();
+  const page = pages[0];
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  // Read values
+  const PolicyNumber = $('#PolicyNumber').value || '';
+  const ProposedInsured = $('#ProposedInsured').value || '';
+  const MaritalStatus = $('#MaritalStatus').value || '';
+  const Religion = $('#Religion').value || '';
+
+  // ====== Field mappings (edit X/Y for your template) ======
+  // Coordinates are PDF points (origin at bottom-left).
+  const textMap = [
+    {label:'Policy/Appl No', val:PolicyNumber, x:50, y:760, size:10},
+    {label:'Proposed Insured', val:ProposedInsured, x:50, y:740, size:10},
+    {label:'Marital Status', val:MaritalStatus, x:50, y:720, size:10},
+    {label:'Religion', val:Religion, x:50, y:700, size:10},
+  ];
+  textMap.forEach(t=>{
+    page.drawText(t.val, {x:t.x, y:t.y, size:t.size, font});
+  });
+
+  // Signatures
+  for(const who of ['insured','witness']){
+    const png = SigStore.getPNG(who);
+    if(!png) continue;
+    const img = await pdfDoc.embedPng(png);
+    const scalePct = Math.max(10, parseFloat($('#SigScale_'+who).value || '100'));
+    const baseW = 240; const baseH = 100; // logical base box, adjust later if needed
+    const w = baseW * (scalePct/100);
+    const h = baseH * (scalePct/100);
+    const x = parseFloat($('#SigX_'+who).value || '50');
+    const y = parseFloat($('#SigY_'+who).value || (who==='insured'?'560':'460'));
+    page.drawImage(img, {x, y, width:w, height:h});
+  }
+
+  // Save + download
+  const bytes = await pdfDoc.save();
+  const blob = new Blob([bytes], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'NominationForm_filled.pdf';
+  a.click();
   URL.revokeObjectURL(url);
 }
+
+$('#btnGenPdf').addEventListener('click', ()=> generatePDF());
 </script>
 </body>
 </html>
