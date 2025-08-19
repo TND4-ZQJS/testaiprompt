@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Nomination Form — Web Filler</title>
+<title>Nomination Form — Web Filler (Baseline: Credit/Debit Card Filler)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
 :root{
@@ -15,9 +15,10 @@ h1{margin:15px 0 35px 0;font-size:1.50rem}
 .section{background:#fbfbfd;border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0}
 .section h2{margin:0 0 10px 0;font-size:1.05rem}
 label{display:block;margin:8px 0;font-size:0.95rem}
-input[type=text],select,textarea{
+input[type=text],input[type=email],input[type=number],input[type=tel],select,textarea{
   width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-top:6px;font-size:1rem;background:#fff
 }
+textarea{min-height:100px;resize:vertical}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .muted{color:var(--muted);font-size:0.85rem}
 button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
@@ -25,7 +26,14 @@ button.secondary{background:#999}
 button.ghost{background:transparent;border:1px solid var(--line);color:#333}
 .actions{display:flex;gap:12px;align-items:center}
 
-/* Signature preview tiles (same pattern) */
+/* Policy grid (repeatable) */
+.policy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.policy{background:#fff;padding:12px;border-radius:10px;border:1px solid #eee;position:relative}
+.policy h3{margin:0 0 8px 0;font-size:0.95rem;display:flex;align-items:center;justify-content:space-between}
+.policy .remove-btn{background:transparent;border:1px solid var(--line);color:#333;border-radius:8px;padding:6px 10px;font-size:0.9rem}
+.policy .remove-btn:hover{border-color:#d0d0d7}
+
+/* Signature preview tiles */
 .sig-preview{
   width:100%; height:150px; border:1px dashed #bbb; border-radius:10px;
   display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer; position:relative;
@@ -33,7 +41,7 @@ button.ghost{background:transparent;border:1px solid var(--line);color:#333}
 .sig-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
 .sig-preview span{ color:#999; }
 
-/* Signature Modal (same structure) */
+/* Signature Modal */
 .sig-modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; }
 .sig-modal .box{
   width:min(560px, 92vw); background:#fff; margin:6vh auto; padding:14px; border-radius:12px;
@@ -44,392 +52,475 @@ button.ghost{background:transparent;border:1px solid var(--line);color:#333}
 #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
 .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
 
-/* Hidden XY% inputs — match ref behavior; keep visible for tuning or hide by keeping this */
-.hidden-inputs {display:none;}
+/* XY% signature tuning */
+.hidden-inputs {display: none;}
 
-/* Save indicator toast */
+/* Save indicator */
 #saveStatus{
   position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff;
   padding:6px 10px; border-radius:8px; font-size:0.85rem; opacity:0; transition:opacity .25s;
 }
 
-@media (max-width:900px){ }
+@media (max-width:900px){ .policy-grid{grid-template-columns:1fr} }
 @media (max-width:720px){ }
 </style>
 </head>
 <body>
 <main>
-  <h1>Nomination Form</h1>
+  <h1>Nomination Form (Baseline UI/Behavior from Credit/Debit Card Web Filler)</h1>
 
-  <!-- Section: Policy details -->
-  <section class="section">
-    <h2>Policy Details</h2>
+  <!-- Section: Policy Details (repeatable up to 5) -->
+  <section class="section" id="sectionPolicy">
+    <h2>Section — Policy Details</h2>
+    <div id="policiesContainer" class="policy-grid"></div>
+    <div class="row">
+      <button id="addPolicy">+ Add Another Policy</button>
+      <small class="muted">Repeatable up to 5 entries</small>
+    </div>
+  </section>
+
+  <!-- Signature Composite Block -->
+  <section class="section" id="sectionSignature">
+    <h2>Section — Signature</h2>
 
     <div class="row">
-      <label style="flex:1">
-        Application/Policy Number
-        <input id="PolicyNumber" data-autosave type="text" placeholder="Enter number">
+      <label style="flex:1">Name
+        <input id="signature_name" type="text" placeholder="FULL NAME">
       </label>
-      <label style="flex:1">
-        Proposed Insured
-        <input id="ProposedInsured" data-autosave type="text" placeholder="Full name">
+      <label style="flex:1">IC No
+        <input id="signature_ic" type="text" placeholder="IC NUMBER">
       </label>
     </div>
 
     <div class="row">
-      <label style="flex:1">
-        Marital Status
-        <select id="MaritalStatus" data-autosave>
-          <option value="">-- Select --</option>
-          <option>Single</option>
-          <option>Married</option>
-          <option>Divorced</option>
-          <option>Widowed</option>
-        </select>
+      <label style="flex:1">State
+        <input id="signature_state" type="text" placeholder="STATE">
       </label>
+      <label style="flex:1">Date (DD)
+        <input id="signature_date" type="number" min="1" max="31" placeholder="DD">
+      </label>
+      <label style="flex:1">Month
+        <input id="signature_month" type="number" min="1" max="12" placeholder="MM">
+      </label>
+      <label style="flex:1">Year (YYYY)
+        <input id="signature_year" type="number" placeholder="YYYY">
+      </label>
+    </div>
 
-      <label style="flex:1">
-        Religion
-        <select id="Religion" data-autosave>
-          <option value="">-- Select --</option>
-          <option>Muslim</option>
-          <option>Non-Muslim</option>
-        </select>
+    <label>Signature Pad</label>
+    <div id="signature_sig_preview" class="sig-preview" tabindex="0" role="button" aria-label="Tap to draw signature">
+      <span>Tap to Sign</span>
+    </div>
+
+    <!-- Optional XY/Scale tuning to mimic baseline -->
+    <div class="hidden-inputs">
+      <label>X (% from left)
+        <input id="signature_x" type="number" step="0.1" value="10">
+      </label>
+      <label>Y (% from bottom)
+        <input id="signature_y" type="number" step="0.1" value="10">
+      </label>
+      <label>Scale (%)
+        <input id="signature_scale" type="number" step="1" value="100">
       </label>
     </div>
   </section>
 
-  <!-- Section: Signatures -->
-  <section class="section">
-    <h2>Signatures</h2>
-
-    <div class="row" style="align-items:stretch">
-      <div style="flex:1;min-width:260px">
-        <label>Signature of Life Insured</label>
-        <div class="sig-preview" id="sigTile_insured" data-target="insured">
-          <span>Tap to Sign (Life Insured)</span>
-        </div>
-        <div class="row" style="justify-content:flex-end">
-          <button class="ghost" id="clearSig_insured">Clear Signature</button>
-        </div>
-
-        <!-- XY% tuning (same concept as reference) -->
-        <div class="row">
-          <div>
-            <div class="muted" style="margin-bottom:6px">Life Insured Signature — Positioning</div>
-            <div class="row">
-              <label style="width:130px">X:
-                <input id="SigX_insured" data-autosave type="text" value="50">
-              </label>
-              <label style="width:130px">Y:
-                <input id="SigY_insured" data-autosave type="text" value="560">
-              </label>
-              <label style="width:160px">Scale (%):
-                <input id="SigScale_insured" data-autosave type="text" value="100">
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="flex:1;min-width:260px">
-        <label>Signature of Witness</label>
-        <div class="sig-preview" id="sigTile_witness" data-target="witness">
-          <span>Tap to Sign (Witness)</span>
-        </div>
-        <div class="row" style="justify-content:flex-end">
-          <button class="ghost" id="clearSig_witness">Clear Signature</button>
-        </div>
-
-        <!-- XY% tuning -->
-        <div class="row">
-          <div>
-            <div class="muted" style="margin-bottom:6px">Witness Signature — Positioning</div>
-            <div class="row">
-              <label style="width:130px">X:
-                <input id="SigX_witness" data-autosave type="text" value="50">
-              </label>
-              <label style="width:130px">Y:
-                <input id="SigY_witness" data-autosave type="text" value="460">
-              </label>
-              <label style="width:160px">Scale (%):
-                <input id="SigScale_witness" data-autosave type="text" value="100">
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <small class="muted">Tip: adjust X/Y/Scale to align on your PDF, then regenerate.</small>
-  </section>
-
+  <!-- Actions -->
   <section class="section">
     <div class="actions">
-      <button id="btnGenPdf">Generate PDF</button>
-      <button class="ghost" id="btnReset">Reset All</button>
+      <button id="btnExport">Generate PDF</button>
+      <button id="btnReset" class="secondary">Reset All</button>
+      <button id="btnToggleXY" class="ghost">Toggle XY% Signature Tuning</button>
     </div>
+    <small class="muted">PDF Template: not provided. This tool will generate a simple PDF with your entries. If you add a template later, set the filename in JS and fields will map by <code>PDF_MAP</code>.</small>
   </section>
+
 </main>
 
-<!-- Signature Modal (same structure/IDs as reference) -->
+<!-- Signature Modal -->
 <div id="sigModal" class="sig-modal" aria-hidden="true">
   <div class="box">
-    <h3 id="sigTitle">Draw Signature</h3>
+    <h3>Draw Signature</h3>
     <canvas id="sigCanvas"></canvas>
     <div class="sig-actions">
+      <button id="sigUndo" class="ghost">Undo</button>
+      <button id="sigClear" class="ghost">Clear</button>
+      <button id="sigCancel" class="secondary">Cancel</button>
       <button id="sigDone">Done</button>
-      <button class="ghost" id="sigClear">Clear</button>
-      <button class="ghost" id="sigCancel">Cancel</button>
     </div>
   </div>
 </div>
 
 <div id="saveStatus">Saved</div>
 
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<!-- External libs (same pattern as baseline: loaded from CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha256-1NqH/F3gpoq1bQ7xwDv2kqFiP4N8LLxP3v3pQ0E3HlU=" crossorigin="anonymous"></script>
+
 <script>
-/* ====== Config (PDF + storage key) — mirrors reference structure ====== */
-const PDF_FILE = 'Nomination_Form.pdf'; // <-- replace with your actual template filename
-const NS = 'NF_v1'; // localStorage namespace (similar to reference keying)
+/* =========================
+   CONSTANTS & HELPERS
+   ========================= */
+const NS = 'nomination.'; // localStorage namespace
+const MAX_POLICIES = 5;
 
-/* ====== Utilities ====== */
-const $ = sel => document.querySelector(sel);
-const $$ = sel => Array.from(document.querySelectorAll(sel));
-function showSavedToast(){
-  const t = $('#saveStatus');
-  t.style.opacity = '1';
-  clearTimeout(showSavedToast._h);
-  showSavedToast._h = setTimeout(()=> t.style.opacity='0', 800);
-}
-function saveKV(key, val){ localStorage.setItem(NS+':'+key, val); showSavedToast(); }
-function loadKV(key, def=''){ return localStorage.getItem(NS+':'+key) ?? def; }
-function delKV(key){ localStorage.removeItem(NS+':'+key); }
-
-/* ====== Autosave (same pattern as reference paste) ====== */
-function initAutosave(){
-  $$('[data-autosave]').forEach(el=>{
-    const key = el.id || el.name;
-    if(!key) return;
-    // restore
-    if(el.tagName==='SELECT' || el.type==='text' || el.type==='textarea'){
-      el.value = loadKV(key, el.value || '');
-    }
-    if(el.type==='checkbox' || el.type==='radio'){
-      el.checked = loadKV(key, '0') === '1';
-    }
-    // events
-    const handler = ()=>{
-      if(el.type==='checkbox' || el.type==='radio'){
-        saveKV(key, el.checked ? '1' : '0');
-      }else{
-        saveKV(key, el.value ?? '');
-      }
-    };
-    el.addEventListener('input', handler);
-    el.addEventListener('change', handler);
-  });
-}
-initAutosave();
-
-/* ====== Signature pad (tile -> modal -> save preview), identical UX ====== */
-const SigStore = {
-  get(target){ return JSON.parse(loadKV('sig:'+target, 'null')); },
-  set(target, data){ saveKV('sig:'+target, JSON.stringify(data)); },
-  getPNG(target){ return loadKV('sig:'+target+':png', ''); },
-  setPNG(target, dataUrl){ saveKV('sig:'+target+':png', dataUrl); },
-  clear(target){
-    delKV('sig:'+target); delKV('sig:'+target+':png');
-  }
+// Mapping object: HTML id -> PDF field name
+const PDF_MAP = {
+  // Repeatable Policy Owner Names will be generated as: PO_name_1..5 -> PO_name
+  // Signature composite:
+  'signature_name': 'signature_name',
+  'signature_ic': 'signature_ic',
+  'signature_state': 'signature_state',
+  'signature_date': 'signature_date',
+  'signature_month': 'signature_month',
+  'signature_year': 'signature_year',
+  // Signature image uses special handling
+  'signature_sig': 'signature_sig'
 };
 
-// open modal from tiles
-['insured','witness'].forEach(target=>{
-  const tile = $('#sigTile_'+target);
-  const clearBtn = $('#clearSig_'+target);
-  tile.addEventListener('click', ()=> openSigModal(target));
-  clearBtn.addEventListener('click', (e)=>{
-    e.preventDefault();
-    SigStore.clear(target);
-    renderSigPreview(target);
-  });
-  renderSigPreview(target);
-});
+// Utility shortcuts
+const $ = (id)=>document.getElementById(id);
+const el = (tag, props={}, ...children)=>{
+  const n=document.createElement(tag); Object.assign(n, props);
+  for(const c of children){ if(typeof c==='string') n.appendChild(document.createTextNode(c)); else if(c) n.appendChild(c); }
+  return n;
+};
+const showSaved = ()=>{
+  const b = $('saveStatus'); b.style.opacity='1';
+  clearTimeout(showSaved._t);
+  showSaved._t = setTimeout(()=>b.style.opacity='0', 700);
+};
+const lsGet = (k, def=null)=>{ try{ const v=localStorage.getItem(NS+k); return v==null?def:JSON.parse(v);}catch(e){return def;} };
+const lsSet = (k, v)=>{ localStorage.setItem(NS+k, JSON.stringify(v)); showSaved(); };
+const lsDel = (k)=>{ localStorage.removeItem(NS+k); };
 
-let sigTarget = null;
-let ctx, paths = [], isDrawing = false;
+/* =========================
+   REPEATABLE: POLICY DETAILS
+   Each item: textarea id = PO_name_{idx}
+   ========================= */
+const policiesContainer = $('policiesContainer');
+const addPolicyBtn = $('addPolicy');
 
-function openSigModal(target){
-  sigTarget = target;
-  $('#sigTitle').textContent = 'Draw Signature — ' + (target==='insured' ? 'Life Insured' : 'Witness');
-  $('#sigModal').style.display = 'block';
-  setupSigCanvas();
-  restoreSigPaths();
-}
-function closeSigModal(){
-  $('#sigModal').style.display = 'none';
-}
-
-function setupSigCanvas(){
-  const c = $('#sigCanvas');
-  // ensure crispness on HiDPI
-  const ratio = Math.max(1, Math.floor(window.devicePixelRatio || 1));
-  const rect = c.getBoundingClientRect();
-  c.width = Math.floor(rect.width * ratio);
-  c.height = Math.floor(rect.height * ratio);
-  ctx = c.getContext('2d');
-  ctx.scale(ratio, ratio);
-  drawSig();
-}
-
-function drawSig(){
-  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = '#000';
-  paths.forEach(p=>{
-    ctx.beginPath();
-    p.forEach((pt,i)=> i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
-    ctx.stroke();
+function renderPolicies(){
+  policiesContainer.innerHTML = '';
+  const items = lsGet('policies', []);
+  items.forEach((item, i)=>{
+    const card = el('div', {className:'policy'});
+    const title = el('h3', {}, `Policy Detail #${i+1}`, el('button',{className:'remove-btn', onclick:()=>removePolicy(i)},'Remove'));
+    const area = el('label', {}, 'Policy owner name',
+      el('textarea', {
+        id:`PO_name_${i+1}`,
+        placeholder:'Enter policy owner name',
+        oninput:(e)=>{ items[i] = { name:e.target.value }; lsSet('policies', items); },
+        value:item?.name||''
+      })
+    );
+    card.appendChild(title);
+    card.appendChild(area);
+    policiesContainer.appendChild(card);
   });
 }
-function restoreSigPaths(){
-  const saved = SigStore.get(sigTarget);
-  paths = saved || [];
-  drawSig();
+
+function addPolicy(){
+  const items = lsGet('policies', []);
+  if(items.length>=MAX_POLICIES) return alert('You can add up to 5 entries.');
+  items.push({name:''});
+  lsSet('policies', items);
+  renderPolicies();
 }
-function sigPointFromEvent(e, canvas){
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.touches? e.touches[0].clientX : e.clientX) - rect.left;
-  const y = (e.touches? e.touches[0].clientY : e.clientY) - rect.top;
+function removePolicy(idx){
+  const items = lsGet('policies', []);
+  items.splice(idx,1);
+  lsSet('policies', items);
+  renderPolicies();
+}
+
+addPolicyBtn.addEventListener('click', (e)=>{ e.preventDefault(); addPolicy(); });
+
+/* =========================
+   AUTOSAVE for simple inputs
+   ========================= */
+const autosaveIds = ['signature_name','signature_ic','signature_state','signature_date','signature_month','signature_year','signature_x','signature_y','signature_scale'];
+
+function bindAutosave(id){
+  const node = $(id);
+  if(!node) return;
+  // load
+  const saved = lsGet(id);
+  if(saved!=null) node.value = saved;
+  // save
+  node.addEventListener('input', ()=> lsSet(id, node.value));
+}
+
+autosaveIds.forEach(bindAutosave);
+
+/* =========================
+   SIGNATURE PAD (vector paths + PNG)
+   ========================= */
+const sigModal = $('sigModal');
+const sigCanvas = $('sigCanvas');
+const sigPreview = $('signature_sig_preview');
+
+let sigCtx, sigPaths=[], sigCurrentPath=null, sigPNG=null;
+
+function openSig(){
+  sigModal.style.display='block';
+  sigModal.setAttribute('aria-hidden','false');
+
+  // ensure crisp canvas pixels
+  const rect = sigCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  sigCanvas.width = Math.floor(rect.width * dpr);
+  sigCanvas.height = Math.floor(rect.height * dpr);
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.scale(dpr,dpr);
+  sigCtx.lineCap='round';
+  sigCtx.lineJoin='round';
+  sigCtx.lineWidth=2;
+
+  // load existing
+  const savedPaths = lsGet('signature_sig_paths', []);
+  sigPaths = savedPaths;
+  redrawSig();
+}
+
+function closeSig(){
+  sigModal.style.display='none';
+  sigModal.setAttribute('aria-hidden','true');
+}
+
+function redrawSig(){
+  // clear
+  sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
+  sigCtx.save();
+  sigCtx.scale((window.devicePixelRatio||1), (window.devicePixelRatio||1)); // maintain correct stroke width after scale
+  sigCtx.restore();
+
+  sigCtx.strokeStyle = '#111';
+  sigPaths.forEach(path=>{
+    if(path.length<2) return;
+    sigCtx.beginPath();
+    sigCtx.moveTo(path[0].x, path[0].y);
+    for(let i=1;i<path.length;i++){ sigCtx.lineTo(path[i].x, path[i].y); }
+    sigCtx.stroke();
+  });
+}
+
+function canvasPoint(evt){
+  const rect = sigCanvas.getBoundingClientRect();
+  const x = (evt.touches?evt.touches[0].clientX:evt.clientX) - rect.left;
+  const y = (evt.touches?evt.touches[0].clientY:evt.clientY) - rect.top;
   return {x,y};
 }
-function bindSigHandlers(){
-  const c = $('#sigCanvas');
 
-  const down = e => { e.preventDefault(); isDrawing = true; paths.push([sigPointFromEvent(e,c)]); drawSig(); };
-  const move = e => { if(!isDrawing) return; e.preventDefault(); paths[paths.length-1].push(sigPointFromEvent(e,c)); drawSig(); };
-  const up = e => { isDrawing = false; };
-
-  c.addEventListener('mousedown', down);
-  c.addEventListener('mousemove', move);
-  window.addEventListener('mouseup', up);
-
-  c.addEventListener('touchstart', down, {passive:false});
-  c.addEventListener('touchmove', move, {passive:false});
-  window.addEventListener('touchend', up);
+function startDraw(evt){
+  evt.preventDefault();
+  sigCurrentPath = [];
+  const p = canvasPoint(evt);
+  sigCurrentPath.push(p);
+  sigPaths.push(sigCurrentPath);
+  redrawSig();
 }
-bindSigHandlers();
-
-$('#sigClear').addEventListener('click', (e)=>{ e.preventDefault(); paths=[]; drawSig(); });
-$('#sigCancel').addEventListener('click', (e)=>{ e.preventDefault(); closeSigModal(); });
-
-$('#sigDone').addEventListener('click', ()=>{
-  SigStore.set(sigTarget, paths);
-  const dataURL = $('#sigCanvas').toDataURL('image/png');
-  SigStore.setPNG(sigTarget, dataURL);
-  renderSigPreview(sigTarget);
-  closeSigModal();
-});
-
-function renderSigPreview(target){
-  const tile = $('#sigTile_'+target);
-  const img = SigStore.getPNG(target);
-  if(img){
-    tile.innerHTML = '<img alt="signature preview" />';
-    tile.querySelector('img').src = img;
-  }else{
-    tile.innerHTML = '<span>Tap to Sign ('+(target==='insured'?'Life Insured':'Witness')+')</span>';
+function moveDraw(evt){
+  if(!sigCurrentPath) return;
+  evt.preventDefault();
+  const p = canvasPoint(evt);
+  sigCurrentPath.push(p);
+  redrawSig();
+}
+function endDraw(evt){
+  if(sigCurrentPath && sigCurrentPath.length>0){
+    lsSet('signature_sig_paths', sigPaths);
   }
+  sigCurrentPath = null;
 }
 
-/* ====== Reset All (same behavior as ref) ====== */
-$('#btnReset').addEventListener('click', ()=>{
-  if(!confirm('Reset all saved values?')) return;
-  // clear autosaved
-  $$('[data-autosave]').forEach(el=>{
-    const key = el.id || el.name;
-    if(!key) return;
-    delKV(key);
-    if(el.type==='checkbox' || el.type==='radio'){ el.checked = false; }
-    else { el.value=''; }
+sigCanvas.addEventListener('mousedown', startDraw);
+sigCanvas.addEventListener('mousemove', moveDraw);
+sigCanvas.addEventListener('mouseup', endDraw);
+sigCanvas.addEventListener('mouseleave', endDraw);
+sigCanvas.addEventListener('touchstart', startDraw, {passive:false});
+sigCanvas.addEventListener('touchmove', moveDraw, {passive:false});
+sigCanvas.addEventListener('touchend', endDraw);
+
+$('sigClear').addEventListener('click', ()=>{
+  sigPaths = [];
+  lsSet('signature_sig_paths', sigPaths);
+  redrawSig();
+});
+$('sigUndo').addEventListener('click', ()=>{
+  sigPaths.pop();
+  lsSet('signature_sig_paths', sigPaths);
+  redrawSig();
+});
+$('sigCancel').addEventListener('click', ()=>{
+  closeSig();
+});
+$('sigDone').addEventListener('click', ()=>{
+  // save PNG preview (CSS pixels)
+  const rect = sigCanvas.getBoundingClientRect();
+  // draw onto a temporary canvas at CSS pixel resolution
+  const tmp = document.createElement('canvas');
+  tmp.width = Math.max(1, Math.floor(rect.width));
+  tmp.height = Math.max(1, Math.floor(rect.height));
+  const tctx = tmp.getContext('2d');
+  // redraw paths into tmp
+  tctx.lineCap='round'; tctx.lineJoin='round'; tctx.lineWidth=2; tctx.strokeStyle='#111';
+  sigPaths.forEach(path=>{
+    if(path.length<2) return;
+    tctx.beginPath();
+    tctx.moveTo(path[0].x, path[0].y);
+    for(let i=1;i<path.length;i++){ tctx.lineTo(path[i].x, path[i].y); }
+    tctx.stroke();
   });
-  // clear signatures
-  ['insured','witness'].forEach(t=> SigStore.clear(t));
-  renderSigPreview('insured');
-  renderSigPreview('witness');
-  showSavedToast();
+  sigPNG = tmp.toDataURL('image/png');
+  lsSet('signature_sig_png', sigPNG);
+  // update preview
+  updateSigPreview();
+  closeSig();
 });
 
-/* ====== PDF printing (same flow as reference) ====== */
-async function generatePDF(){
-  const { PDFDocument, StandardFonts } = PDFLib;
-  let pdfDoc;
-  let templateBytes = null;
-  try{
-    const res = await fetch(PDF_FILE);
-    if(!res.ok) throw new Error('Template fetch failed');
-    templateBytes = await res.arrayBuffer();
-  }catch(e){
-    console.warn('Template not found, will create blank PDF as fallback:', e);
-  }
-
-  if(templateBytes){
-    pdfDoc = await PDFDocument.load(templateBytes);
+function updateSigPreview(){
+  sigPreview.innerHTML='';
+  const png = lsGet('signature_sig_png', null);
+  if(png){
+    const img = new Image();
+    img.src = png;
+    sigPreview.appendChild(img);
   }else{
-    pdfDoc = await PDFDocument.create();
-    pdfDoc.addPage([595, 842]); // A4 portrait fallback
+    sigPreview.innerHTML = '<span>Tap to Sign</span>';
   }
+}
 
-  // Use first page (extend if your template has more pages)
-  const pages = pdfDoc.getPages();
-  const page = pages[0];
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+sigPreview.addEventListener('click', openSig);
+sigPreview.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openSig(); }});
 
-  // Read values
-  const PolicyNumber = $('#PolicyNumber').value || '';
-  const ProposedInsured = $('#ProposedInsured').value || '';
-  const MaritalStatus = $('#MaritalStatus').value || '';
-  const Religion = $('#Religion').value || '';
+/* =========================
+   INIT FROM STORAGE
+   ========================= */
+function init(){
+  if(lsGet('policies')==null){ lsSet('policies', []); }
+  renderPolicies();
+  updateSigPreview();
+}
+init();
 
-  // ====== Field mappings (edit X/Y for your template) ======
-  // Coordinates are PDF points (origin at bottom-left).
-  const textMap = [
-    {label:'Policy/Appl No', val:PolicyNumber, x:50, y:760, size:10},
-    {label:'Proposed Insured', val:ProposedInsured, x:50, y:740, size:10},
-    {label:'Marital Status', val:MaritalStatus, x:50, y:720, size:10},
-    {label:'Religion', val:Religion, x:50, y:700, size:10},
+/* =========================
+   RESET
+   ========================= */
+$('btnReset').addEventListener('click', ()=>{
+  if(!confirm('Clear all saved data?')) return;
+  // clear namespaced keys
+  Object.keys(localStorage).forEach(k=>{ if(k.startsWith(NS)) localStorage.removeItem(k); });
+  // reset UI
+  init();
+  autosaveIds.forEach(id=>{ const n=$(id); if(n) n.value=''; });
+  showSaved();
+});
+
+/* =========================
+   TOGGLE XY% TUNING
+   ========================= */
+$('btnToggleXY').addEventListener('click', ()=>{
+  const wrap = document.querySelector('.hidden-inputs');
+  wrap.style.display = (wrap.style.display==='none' || wrap.style.display==='') ? 'block' : 'none';
+});
+
+/* =========================
+   PDF EXPORT
+   - Uses jsPDF to generate a simple PDF
+   - If you later provide a template PDF and want to place into it,
+     you can adapt this function to use pdf-lib to load & fill fields by PDF_MAP.
+   ========================= */
+const TEMPLATE_FILENAME = ''; // e.g. 'Nomination_Form_template.pdf' (not provided)
+
+async function generateSimplePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const margin = 48;
+  let y = margin;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('Nomination Form — Generated Output', margin, y); y+=24;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+
+  // Policy Details
+  doc.text('Section — Policy Details', margin, y); y+=18;
+  const policies = lsGet('policies', []);
+  if(policies.length===0){
+    doc.text('- (no entries)', margin, y); y+=16;
+  }else{
+    policies.forEach((p, i)=>{
+      const txt = `#${i+1} Policy owner name: ${p.name||''}`;
+      const lines = doc.splitTextToSize(txt, 520);
+      doc.text(lines, margin, y); y+= (lines.length*14)+6;
+    });
+  }
+  y+=6;
+
+  // Signature composite fields
+  doc.text('Section — Signature', margin, y); y+=18;
+  const pairs = [
+    ['Name', $('signature_name').value||''],
+    ['IC No', $('signature_ic').value||''],
+    ['State', $('signature_state').value||''],
+    ['Date', $('signature_date').value||''],
+    ['Month', $('signature_month').value||''],
+    ['Year', $('signature_year').value||'']
   ];
-  textMap.forEach(t=>{
-    page.drawText(t.val, {x:t.x, y:t.y, size:t.size, font});
-  });
+  pairs.forEach(([k,v])=>{ doc.text(`${k}: ${v}`, margin, y); y+=14; });
 
-  // Signatures
-  for(const who of ['insured','witness']){
-    const png = SigStore.getPNG(who);
-    if(!png) continue;
-    const img = await pdfDoc.embedPng(png);
-    const scalePct = Math.max(10, parseFloat($('#SigScale_'+who).value || '100'));
-    const baseW = 240; const baseH = 100; // logical base box, adjust later if needed
-    const w = baseW * (scalePct/100);
-    const h = baseH * (scalePct/100);
-    const x = parseFloat($('#SigX_'+who).value || '50');
-    const y = parseFloat($('#SigY_'+who).value || (who==='insured'?'560':'460'));
-    page.drawImage(img, {x, y, width:w, height:h});
+  // Signature image
+  const sig = lsGet('signature_sig_png', null);
+  if(sig){
+    y+=6;
+    doc.text('Signature:', margin, y); y+=8;
+    // place using XY% if provided
+    const xPct = parseFloat($('signature_x').value||'10');
+    const yPct = parseFloat($('signature_y').value||'10');
+    const scalePct = parseFloat($('signature_scale').value||'100');
+
+    // Calculate target size
+    const imgW = 300 * (scalePct/100);
+    const imgH = 120 * (scalePct/100);
+
+    // Absolute placement using % of page width/height from left/bottom (to mirror baseline feel)
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const absX = (xPct/100)*pageW;
+    const absY_fromBottom = (yPct/100)*pageH;
+    const absY = pageH - absY_fromBottom - imgH;
+
+    // Draw a light box showing placement area (debug)
+    // doc.setDrawColor(220); doc.rect(absX, absY, imgW, imgH);
+
+    doc.addImage(sig, 'PNG', absX, absY, imgW, imgH);
+    y += imgH + 12;
   }
 
-  // Save + download
-  const bytes = await pdfDoc.save();
-  const blob = new Blob([bytes], {type:'application/pdf'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'NominationForm_filled.pdf';
-  a.click();
-  URL.revokeObjectURL(url);
+  doc.save('Nomination_Form.pdf');
 }
 
-$('#btnGenPdf').addEventListener('click', ()=> generatePDF());
+$('btnExport').addEventListener('click', async ()=>{
+  // Build dynamic PDF_MAP entries for repeatables (PO_name_1..5 -> PO_name)
+  // (kept for compatibility with a future template filler)
+  const policies = lsGet('policies', []);
+  for(let i=0;i<MAX_POLICIES;i++){
+    const key = `PO_name_${i+1}`;
+    PDF_MAP[key] = 'PO_name'; // all map to the same field name; template should accept multiple or be indexed
+  }
+  await generateSimplePDF();
+});
+
+/* =========================
+   ACCESSIBILITY: Save on unload
+   ========================= */
+window.addEventListener('beforeunload', ()=>{
+  // ensure current simple inputs saved
+  autosaveIds.forEach(id=>{ const n=$(id); if(n) lsSet(id, n.value); });
+});
+
 </script>
 </body>
 </html>
